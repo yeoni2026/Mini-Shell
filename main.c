@@ -6,20 +6,22 @@
 #include <string.h>
 #include "handler.h"
 
-#define command_size 100
-#define argv_size 10
+#define COMMAND_SIZE 100
+#define ARGV_SIZE 10
 int main(void){
-    char command[command_size];
-    char *argv[argv_size];
+    char command[COMMAND_SIZE];
+    char *argv[ARGV_SIZE];
 
     while (1){
         printf("$ ");
-        fgets(command, command_size, stdin);
+        if (fgets(command, COMMAND_SIZE, stdin) == NULL) { //NULL값 확인하는 이유: stdin에서 EOF플래그가 올라갈 시 앞으로의 입력이 모두 NULL처리 되면서 무한루프될 수 있으므로 방지
+            printf("exit\n");
+            exit(0);
+        }
         command[strcspn(command, "\n")] = '\0';
-
         char *token = strtok(command, " ");
         int i;
-        for (i = 0; token != NULL && i < argv_size - 1; i++){
+        for (i = 0; token != NULL && i < ARGV_SIZE - 1; i++){
             argv[i] = token;
             token = strtok(NULL, " ");
         }
