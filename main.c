@@ -6,19 +6,20 @@
 #include <string.h>
 #include "handler.h"
 
-
+#define command_size 100
+#define argv_size 10
 int main(void){
-    char command[100];
-    char *argv[10];
+    char command[command_size];
+    char *argv[argv_size];
 
     while (1){
         printf("$ ");
-        fgets(command, sizeof(command), stdin);
+        fgets(command, command_size, stdin);
         command[strcspn(command, "\n")] = '\0';
 
         char *token = strtok(command, " ");
         int i;
-        for (i = 0; token != NULL; i++){
+        for (i = 0; token != NULL && i < argv_size - 1; i++){
             argv[i] = token;
             token = strtok(NULL, " ");
         }
@@ -45,7 +46,7 @@ int main(void){
             continue;
         }
         if (pid == 0){
-            int ret = execvp(argv[0], argv);
+            execvp(argv[0], argv);
             printf("Command execution failed\n");
             exit(1);
         }
