@@ -68,19 +68,17 @@ int main(void){
                 pid_t pid = fork();
                 if (pid == -1){
                     printf("Fork failed\n");
-                    continue;
+                    error_flag = 1;
+                    break;
                 }
                 if (pid == 0){
                     if (command_num != 0) {
                         dup2(fd[IDX(command_num - 1, 0)], 0);
-                        close(fd[IDX(command_num - 1, 0)]);
-                        close(fd[IDX(command_num - 1, 1)]);
                     }
                     int save_out = dup(1);
                     dup2(fd[IDX(command_num, 1)], 1);
                     close(fd[IDX(command_num, 1)]);
                     close(fd[IDX(command_num, 0)]);
-
                     execvp(argv[start_point], argv + start_point);
                     dup2(save_out, 1);
                     printf("Command execution failed\n");
@@ -114,6 +112,7 @@ int main(void){
             exit(1);
         }
         else {
+            if (command_num) close(fd[IDX(command_num - 1, 0)]);
             while (wait(&status) > 0);
         }
     }
