@@ -74,11 +74,13 @@ int main(void){
                 if (pid == 0){
                     if (command_num != 0) {
                         dup2(fd[IDX(command_num - 1, 0)], 0);
+                        close(fd[IDX(command_num - 1, 0)]);
                     }
                     int save_out = dup(1);
                     dup2(fd[IDX(command_num, 1)], 1);
                     close(fd[IDX(command_num, 1)]);
                     close(fd[IDX(command_num, 0)]);
+                    
                     execvp(argv[start_point], argv + start_point);
                     dup2(save_out, 1);
                     printf("Command execution failed\n");
@@ -104,7 +106,6 @@ int main(void){
             if (command_num) {
                 dup2(fd[IDX(command_num - 1, 0)], 0);
                 close(fd[IDX(command_num - 1, 0)]);
-                close(fd[IDX(command_num - 1, 1)]);
             }
             else redirection(i, argv + start_point);
             execvp(argv[start_point], argv + start_point);
