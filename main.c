@@ -9,7 +9,7 @@
 
 #define COMMAND_SIZE 100
 #define ARGV_SIZE 10
-#define IDX(i, j) (i * 2 + j)
+#define IDX(i, j) ((i) * 2 + (j))
 
 void redirection(int argc, char *argv[]);
 
@@ -57,7 +57,7 @@ int main(void){
 
         for (int j = 0; j < i; j++){
             if (strcmp(argv[j], "|") == 0){
-                if (j == 0 || j == i){
+                if (j == 0 || j == i - 1 || argv[j - 1] == NULL){
                     printf("Missing command\n");
                     error_flag = 1;
                     break;
