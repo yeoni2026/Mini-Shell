@@ -10,14 +10,6 @@
 #define COMMAND_SIZE 100
 #define ARGV_SIZE 10
 
-void restore_stdin(int fd, int save){
-    dup2(save, 0);
-    close(fd);    
-}
-void restore_stdout(int fd, int save){
-    dup2(save, 1);
-    close(fd);    
-}
 
 int main(void){
     char command[COMMAND_SIZE];
@@ -65,7 +57,7 @@ int main(void){
             int error_flag = 0;
             int fileout_flag = 0;
             int filein_flag = 0;
-            int fd_out, fd_in, save_in, save_out;
+            int fd_out, fd_in;
             char message[100]; //바로바로 printf 출력을 하지 않고 message에 문구를 담아 이후 error_flag 처리에서 출력하는 이유: for 반복문 내에서 리다이렉션이 즉각적으로 이루어지기에 message가 표준출력(stdout)으로 출력되지 않을 위험이 있기 때문
 
             for (int j = 0; j < i; j++){
@@ -82,8 +74,8 @@ int main(void){
                     }
 
                     fd_out = open(argv[j + 1], O_WRONLY | O_CREAT | O_TRUNC, 0644);
-                    save_out = dup(1); //표준 출력 어딘가에 저장해놓기 > 그래야 복구 가능
                     dup2(fd_out, 1);
+                    close(fd_out);
                     fileout_flag = 1;
                     argv[j] = NULL;
                 }
@@ -105,15 +97,13 @@ int main(void){
                         error_flag = 1;
                         break;
                     }
-                    save_in = dup(0); //표준 입력 어딘가에 저장해놓기 > 그래야 복구 가능
                     dup2(fd_in, 0);
+                    close(fd_in);
                     filein_flag = 1;
                     argv[j] = NULL;
                 }
             }
             if (error_flag) {
-                if (fileout_flag) restore_stdout(fd_out, save_out);
-                if (filein_flag) restore_stdin(fd_in, save_in);
                 printf("%s\n", message);
                 exit(1);
             }
