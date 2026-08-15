@@ -50,10 +50,14 @@ int main(void){
             printf("exit\n");
             exit(0);
         }
-        command[strcspn(command, "\n")] = '\0';
 
-        int c;
-        while ((c = getchar()) != EOF && c != '\n');
+        char *newline = strchr(command, '\n');
+
+        if (newline != NULL) *newline = '\0';
+        else {
+            int c;
+            while ((c = getchar()) != EOF && c != '\n');
+        }
 
         char *token = strtok(command, " ");
         int i;
@@ -99,7 +103,6 @@ int main(void){
                 pipe(fd + 2 * command_num);
                 
                 pid[pid_count] = fork();
-                pid_count++;
 
                 if (pid[pid_count] == -1){
                     printf("Fork failed\n");
@@ -125,6 +128,7 @@ int main(void){
                 close(fd[IDX(command_num, 1)]);
                 start_point = j + 1;
                 command_num++;
+                pid_count++;
             }
         }
         if (error_flag){
@@ -137,7 +141,6 @@ int main(void){
         int background_flag = 0;
 
         pid[pid_count] = fork();
-        pid_count++;
 
         if (pid[pid_count] == -1){
             printf("Fork failed\n");
@@ -149,6 +152,8 @@ int main(void){
                     printf("Pipes and background execution cannot be used together\n");
                     exit(1);
                 }
+                argv[i - 1] = NULL;
+
                 curr->next = malloc(sizeof(struct Job));
                 curr = curr->next;
 
@@ -170,7 +175,7 @@ int main(void){
         else {
             if (command_num) close(fd[IDX(command_num - 1, 0)]);
             if (!background_flag){
-                for (int j = 0; j < pid_count; j++){
+                for (int j = 0; j <= pid_count; j++){
                     waitpid(pid[j], &status, 0);
                 }
             }

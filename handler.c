@@ -45,7 +45,7 @@ void jobs_handler(int argc, struct Job *dummy){
     int j = 1;
     while (ptr->next != NULL){
         ptr = ptr->next;
-        printf("[%2d] %-6d %s\n", j, ptr->pid, ptr->command);
+        printf("[%02d] %d %s\n", j, ptr->pid, ptr->command);
         j++;
     }
     if (j == 1){
