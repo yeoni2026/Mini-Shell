@@ -21,6 +21,10 @@ int main(void){
     pid_t pid[ARGV_SIZE];
     
     struct Job *dummy = malloc(sizeof(struct Job));
+    if (dummy == NULL){
+        printf("malloc failed\n");
+        exit(1);
+    }
     struct Job *curr = dummy;
 
     while (1){
@@ -39,6 +43,10 @@ int main(void){
                 ptr = ptr->next;
                 if (ptr->pid == back_pid){
                     prev->next = ptr->next; //연결리스트 중간 인덱스값 제거: prev 구조체의 next 포인터 주소를 ptr의 next 포인터가 가리키는 구조체로 연결
+                    if (ptr == curr){
+                        curr = prev;
+                    }
+                    free(ptr);
                     break;
                 }
             }
@@ -48,6 +56,7 @@ int main(void){
 
         if (fgets(command, COMMAND_SIZE, stdin) == NULL) { //NULL값 확인하는 이유: stdin에서 EOF플래그가 올라갈 시 앞으로의 입력이 모두 NULL처리 되면서 무한루프될 수 있으므로 방지
             printf("exit\n");
+            free(dummy);
             exit(0);
         }
 
@@ -69,6 +78,13 @@ int main(void){
         
         if (i == 0) continue;
 
+        if (strcmp(argv[0], "exit") == 0){
+            if (i != 1){
+                printf("exit has to have 1 argument\n");
+                continue;
+            }
+            exit(0);    
+        }
         if (strcmp(argv[0], "cd") == 0){
             cd_handler(i, argv);
             continue;
@@ -77,10 +93,7 @@ int main(void){
             pwd_handler(i);
             continue;
         }
-        if (strcmp(argv[0], "exit") == 0){
-            exit_handler(i);
-            continue;
-        }
+        
         if (strcmp(argv[0], "jobs") == 0){
             jobs_handler(i, dummy);
             continue;
@@ -138,7 +151,10 @@ int main(void){
             continue;
         }
 
-        int background_flag = 0;
+        if (strcmp(argv[i - 1], "&") == 0 && command_num){
+            printf("Pipes and background execution cannot be used together\n");
+            continue;
+        }
 
         pid[pid_count] = fork();
 
@@ -148,20 +164,7 @@ int main(void){
         }
         if (pid[pid_count] == 0){
             if (strcmp(argv[i - 1], "&") == 0){
-                if (command_num){
-                    printf("Pipes and background execution cannot be used together\n");
-                    exit(1);
-                }
                 argv[i - 1] = NULL;
-
-                curr->next = malloc(sizeof(struct Job));
-                curr = curr->next;
-
-                curr->pid = getpid();
-                strcpy(curr->command, argv[0]);
-                curr->next = NULL;
-
-                background_flag = 1;
             }
             if (command_num) {
                 dup2(fd[IDX(command_num - 1, 0)], 0);
@@ -173,6 +176,22 @@ int main(void){
             exit(1);
         }
         else {
+            int background_flag = 0;
+            if (strcmp(argv[i - 1], "&") == 0){
+                curr->next = malloc(sizeof(struct Job));
+                curr = curr->next;
+                if (curr == NULL){
+                    printf("malloc failed\n");
+                    continue;
+                }
+
+                curr->pid = pid[pid_count];
+                strcpy(curr->command, argv[0]);
+                curr->next = NULL;
+
+                background_flag = 1;
+            }
+
             if (command_num) close(fd[IDX(command_num - 1, 0)]);
             if (!background_flag){
                 for (int j = 0; j <= pid_count; j++){

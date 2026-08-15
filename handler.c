@@ -28,13 +28,6 @@ void pwd_handler(int argc){
     else printf("%s\n", path);
     return;
 }
-void exit_handler(int argc){
-    if (argc != 1){
-        printf("exit has to have 1 argument\n");
-        return;
-    }
-    exit(0);
-}
 void jobs_handler(int argc, struct Job *dummy){
     if (argc != 1){
         printf("jobs has to have 1 argument\n");
