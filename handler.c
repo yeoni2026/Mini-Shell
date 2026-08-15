@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include "handler.h"
+#include "job.h"
 
 void cd_handler(int argc, char *argv[]){
     if (argc != 2){
@@ -33,4 +34,23 @@ void exit_handler(int argc){
         return;
     }
     exit(0);
+}
+void jobs_handler(int argc, struct Job *dummy){
+    if (argc != 1){
+        printf("jobs has to have 1 argument\n");
+        return;
+    }
+    struct Job *ptr;
+    ptr = dummy;
+    int j = 1;
+    while (ptr->next != NULL){
+        ptr = ptr->next;
+        printf("[%2d] %-6d %s\n", j, ptr->pid, ptr->command);
+        j++;
+    }
+    if (j == 1){
+        printf("Background process not exist\n");
+        return;
+    }
+    return;
 }
