@@ -47,3 +47,14 @@ void jobs_handler(int argc, struct Job *dummy){
     }
     return;
 }
+void free_heap(struct Job *dummy){
+    struct Job *ptr;
+    struct Job *prev;
+    ptr = dummy;
+    while (ptr->next != NULL){
+        prev = ptr;
+        ptr = ptr->next;
+        free(prev);
+    }
+    free(ptr);
+}

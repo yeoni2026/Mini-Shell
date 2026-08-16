@@ -56,7 +56,7 @@ int main(void){
 
         if (fgets(command, COMMAND_SIZE, stdin) == NULL) { //NULL값 확인하는 이유: stdin에서 EOF플래그가 올라갈 시 앞으로의 입력이 모두 NULL처리 되면서 무한루프될 수 있으므로 방지
             printf("exit\n");
-            free(dummy);
+            free_heap(dummy);
             exit(0);
         }
 
@@ -83,6 +83,7 @@ int main(void){
                 printf("exit has to have 1 argument\n");
                 continue;
             }
+            free_heap(dummy);
             exit(0);    
         }
         if (strcmp(argv[0], "cd") == 0){
