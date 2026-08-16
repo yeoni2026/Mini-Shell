@@ -33,24 +33,23 @@ int main(void){
 
         while(1){ //백그라운드 프로세스 Zombie 처리
             pid_t back_pid = waitpid(-1, &status, WNOHANG);
-            if (back_pid > 0) {
-                struct Job *ptr;
-                struct Job *prev;
-                ptr = dummy;
-                while (ptr->next != NULL){
-                    prev = ptr;
-                    ptr = ptr->next;
-                    if (ptr->pid == back_pid){
-                        prev->next = ptr->next; //연결리스트 중간 인덱스값 제거: prev 구조체의 next 포인터 주소를 ptr의 next 포인터가 가리키는 구조체로 연결
-                        if (ptr == curr){
-                            curr = prev;
-                        }
-                        free(ptr);
-                        break;
+            if (back_pid == 0 || back_pid == -1) break;
+            
+            struct Job *ptr;
+            struct Job *prev;
+            ptr = dummy;
+            while (ptr->next != NULL){
+                prev = ptr;
+                ptr = ptr->next;
+                if (ptr->pid == back_pid){
+                    prev->next = ptr->next; //연결리스트 중간 인덱스값 제거: prev 구조체의 next 포인터 주소를 ptr의 next 포인터가 가리키는 구조체로 연결
+                    if (ptr == curr){
+                        curr = prev;
                     }
+                    free(ptr);
+                    break;
                 }
             }
-            else break;
         }
 
         printf("$ ");
@@ -167,7 +166,7 @@ int main(void){
             if (strcmp(argv[i - 1], "&") == 0){
                 argv[i - 1] = NULL;
             }
-            else if (command_num) {
+            else if (command_num) { //else if가 아니라 if일때 redirection()이 & 제거되고도 argc값을 그대로 받아서 NULL 역참조가 일어났었음! (버그 수정)
                 dup2(fd[IDX(command_num - 1, 0)], 0);
                 close(fd[IDX(command_num - 1, 0)]);
             }
