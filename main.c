@@ -10,7 +10,7 @@
 
 
 #define COMMAND_SIZE 100
-#define ARGV_SIZE 10
+#define ARGV_SIZE 20
 #define IDX(i, j) ((i) * 2 + (j)) //i, j에 괄호를 쳐야하는 이유!: 예를들어 i에 command_num - 1이 들어가면, #define은 순수 텍스트 치환이기 때문에 command_num - 1 * 2로 변환함;; 
 
 void redirection(int argc, char *argv[]);
@@ -178,11 +178,11 @@ int main(void){
             int background_flag = 0;
             if (strcmp(argv[i - 1], "&") == 0){
                 curr->next = malloc(sizeof(struct Job));
-                curr = curr->next;
-                if (curr == NULL){
+                if (curr->next == NULL){
                     fprintf(stderr, "malloc failed\n");
                     continue;
                 }
+                curr = curr->next;
 
                 curr->pid = pid[pid_count];
                 strcpy(curr->command, argv[0]);
@@ -221,6 +221,7 @@ void redirection(int argc, char *argv[]){
             fd_out = open(argv[j + 1], O_WRONLY | O_CREAT | O_TRUNC, 0644);
             if (fd_out == -1){
                 fprintf(stderr, "Error: open output file");
+                exit(1);
             }
             dup2(fd_out, 1);
             close(fd_out);
