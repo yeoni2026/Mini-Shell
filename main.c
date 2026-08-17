@@ -22,7 +22,7 @@ int main(void){
     
     struct Job *dummy = malloc(sizeof(struct Job));
     if (dummy == NULL){
-        printf("malloc failed\n");
+        fprintf(stderr, "malloc failed\n");
         exit(1);
     }
     struct Job *curr = dummy;
@@ -80,7 +80,7 @@ int main(void){
 
         if (strcmp(argv[0], "exit") == 0){
             if (i != 1){
-                printf("exit has to have 1 argument\n");
+                fprintf(stderr, "exit has to have 1 argument\n");
                 continue;
             }
             free_heap(dummy);
@@ -109,7 +109,7 @@ int main(void){
         for (int j = 0; j < i; j++){
             if (strcmp(argv[j], "|") == 0){
                 if (j == 0 || j == i - 1 || argv[j - 1] == NULL){
-                    printf("Missing command\n");
+                    fprintf(stderr, "Missing command\n");
                     error_flag = 1;
                     break;
                 }
@@ -119,7 +119,7 @@ int main(void){
                 pid[pid_count] = fork();
 
                 if (pid[pid_count] == -1){
-                    printf("Fork failed\n");
+                    fprintf(stderr, "Fork failed\n");
                     error_flag = 1;
                     break;
                 }
@@ -128,14 +128,12 @@ int main(void){
                         dup2(fd[IDX(command_num - 1, 0)], 0);
                         close(fd[IDX(command_num - 1, 0)]);
                     }
-                    int save_out = dup(1);
                     dup2(fd[IDX(command_num, 1)], 1);
                     close(fd[IDX(command_num, 1)]);
                     close(fd[IDX(command_num, 0)]);
                     
                     execvp(argv[start_point], argv + start_point);
-                    dup2(save_out, 1);
-                    printf("Command execution failed\n");
+                    fprintf(stderr, "Command execution failed\n");
                     exit(1);
                 }
                 if (command_num != 0) close(fd[IDX(command_num - 1, 0)]);
@@ -153,14 +151,14 @@ int main(void){
         }
 
         if (strcmp(argv[i - 1], "&") == 0 && command_num){
-            printf("Pipes and background execution cannot be used together\n");
+            fprintf(stderr, "Pipes and background execution cannot be used together\n");
             continue;
         }
 
         pid[pid_count] = fork();
 
         if (pid[pid_count] == -1){
-            printf("Fork failed\n");
+            fprintf(stderr, "Fork failed\n");
             continue;
         }
         if (pid[pid_count] == 0){
@@ -173,7 +171,7 @@ int main(void){
             }
             else redirection(i, argv + start_point);
             execvp(argv[start_point], argv + start_point);
-            printf("Command execution failed\n");
+            fprintf(stderr, "Command execution failed\n");
             exit(1);
         }
         else {
@@ -182,7 +180,7 @@ int main(void){
                 curr->next = malloc(sizeof(struct Job));
                 curr = curr->next;
                 if (curr == NULL){
-                    printf("malloc failed\n");
+                    fprintf(stderr, "malloc failed\n");
                     continue;
                 }
 
@@ -205,27 +203,25 @@ int main(void){
 
 void redirection(int argc, char *argv[]){
     //IO 리다이렉션 
-    int error_flag = 0;
     int fileout_flag = 0;
     int filein_flag = 0;
-    int fd_out, fd_in, save_out;
-    char message[100]; //바로바로 printf 출력을 하지 않고 message에 문구를 담아 이후 error_flag 처리에서 출력하는 이유: for 반복문 내에서 리다이렉션이 즉각적으로 이루어지기에 message가 표준출력(stdout)으로 출력되지 않을 위험이 있기 때문
+    int fd_out, fd_in;
 
     for (int j = 0; j < argc; j++){
         if (strcmp(argv[j], ">") == 0){
             if (j + 1 == argc){
-                strcpy(message, "Missing output file");
-                error_flag = 1;
-                break;
+                fprintf(stderr, "Missing output file\n");
+                exit(1);
             }
             if (fileout_flag){
-                strcpy(message, "too many redirections");
-                error_flag = 1;
-                break;
+                fprintf(stderr, "too many redirections\n");
+                exit(1);
             }
 
             fd_out = open(argv[j + 1], O_WRONLY | O_CREAT | O_TRUNC, 0644);
-            save_out = dup(1);
+            if (fd_out == -1){
+                fprintf(stderr, "Error: open output file");
+            }
             dup2(fd_out, 1);
             close(fd_out);
             fileout_flag = 1;
@@ -233,31 +229,23 @@ void redirection(int argc, char *argv[]){
         }
         else if (strcmp(argv[j], "<") == 0){
             if (j + 1 == argc){
-                strcpy(message, "Missing input file");
-                error_flag = 1;
-                break;
+                fprintf(stderr, "Missing input file\n");
+                exit(1);
             }
             if (filein_flag){
-                strcpy(message, "too many redirections");
-                error_flag = 1;
-                break;
+                fprintf(stderr, "too many redirections\n");
+                exit(1);
             }
 
             fd_in = open(argv[j + 1], O_RDONLY);
             if (fd_in == -1){
-                strcpy(message, "File not exist");
-                error_flag = 1;
-                break;
+                fprintf(stderr, "Error: open input file\n");
+                exit(1);
             }
             dup2(fd_in, 0);
             close(fd_in);
             filein_flag = 1;
             argv[j] = NULL;
         }
-    }
-    if (error_flag) {
-        dup2(save_out, 1);
-        printf("%s\n", message);
-        exit(1);
     }
 }
